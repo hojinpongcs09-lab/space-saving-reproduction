@@ -36,7 +36,7 @@
 
 ## Fig. 6 重現與 D10 基礎
 
-[`figure6/`](figure6/) 收錄隊友的 Space-Saving 與 CountSketch 實驗，包含 C++ 實作、Zipf 合成資料生成器、測試、繪圖程式和已量測結果。Fig. 6 在整串資料處理完後比較 Top-100。D10 可以沿用 Space-Saving 的估計值與誤差下界，以及同一套資料生成方式，再加入逐筆告警與精確達標序號。
+[`figure6/`](figure6/) 收錄[@Akhilesh1004](https://github.com/Akhilesh1004)的 Space-Saving 與 CountSketch 實驗，包含 C++ 實作、Zipf 合成資料生成器、測試、繪圖程式和已量測結果。Fig. 6 在整串資料處理完後比較 Top-100。D10 可以沿用 Space-Saving 的估計值與誤差下界，以及同一套資料生成方式，再加入逐筆告警與精確達標序號。
 
 - [實驗設定與重跑方式](figure6/README.md)
 - [Fig. 6 比較圖](figure6/results/comparison/figure6_comparison.png)
