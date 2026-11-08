@@ -34,6 +34,18 @@
 2. **並行開發**：A 提供更新程式與手算測試，B 提供資料和精確達標序號，C 先用小樣本完成批次實驗框架。
 3. **整合驗證**：三人核對小樣本的誤差界、誤報、漏報和延遲，再執行完整參數組合並整理報告。
 
+## Fig. 6 重現與 D10 基礎
+
+[`figure6/`](figure6/) 收錄隊友的 Space-Saving 與 CountSketch 實驗，包含 C++ 實作、Zipf 合成資料生成器、測試、繪圖程式和已量測結果。Fig. 6 在整串資料處理完後比較 Top-100。D10 可以沿用 Space-Saving 的估計值與誤差下界，以及同一套資料生成方式，再加入逐筆告警與精確達標序號。
+
+- [實驗設定與重跑方式](figure6/README.md)
+- [Fig. 6 比較圖](figure6/results/comparison/figure6_comparison.png)
+- [第三方來源與授權說明](figure6/THIRD_PARTY_NOTICES.md)
+
+## 貢獻者
+
+- [@Akhilesh1004](https://github.com/Akhilesh1004) — Fig. 6 重現與 Space-Saving／CountSketch 比較實驗。
+
 ## 參考資料
 
 - [Space-Saving 原論文（ICDT 2005）](https://link.springer.com/chapter/10.1007/978-3-540-30570-5_27)
