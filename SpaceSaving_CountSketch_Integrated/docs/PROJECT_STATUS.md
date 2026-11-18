@@ -1,0 +1,11 @@
+# Project status — expanded sensitivity revision
+
+Implemented and validated: original Space-Saving, CountSketch, partial Figure 6 reproduction, alpha-specific policy, paired 1,000-counter comparison, block-aligned window with naive/interval merges, strict membership/order certification, exact window oracle, deterministic and tie-aware metrics, fixed-budget sweep to 10,000, windowed sweep to 10,000, static/abrupt/gradual/overlap workloads, sensitivity CSVs and plots. The full expanded Space-Saving sweep has 147 rows; windowed sweep has 1,512 rows. Original three unit tests and new tie-aware edge-case tests pass; both smoke experiments passed. Bound-aware validation recorded zero bound violations and checked each certified result.
+
+See `SENSITIVITY_PROTOCOL.md` for exact definitions, `RELATED_WORK.md` for comparison with prior work, and `results/sensitivity/RESULTS_SUMMARY.md` for actual results. Historical `results/figure6_comparison.csv`, `results/space_saving_budget_comparison.csv`, and `results/windowed/windowed_comparison.csv` predate the expanded evaluator; do not combine their timing/coverage/certification fields without accounting for protocol differences.
+
+Remaining before final reporting:
+- Repeat on team's Linux machine, preferably sequentially and with CPU conditions documented; collect publication-quality runtime measures and error bars. Full CountSketch Figure 6 rerun with tie fields is available through `make reproduce`, not repeated here; CountSketch algorithm and settings are unchanged.
+- Synthetic scenarios do not establish real Internet workload performance; if feasible include a public trace and a same-window competitor, or disclose absence. Exact Sliding Window remains an oracle, not a matched-memory baseline. Periodic reset and snapshot-differencing are not implemented in this integrated revision.
+- Read full related papers and cite their precise task/assumptions. Existing prior-work summary uses publisher abstracts/introduction, not exhaustive method replication. No novelty claim for block expiration or frequency intervals alone.
+- Preserve block-aligned query and query-sampled delay limitations, persistent memory exclusions, incomplete original Figure 6 settings, omitted Probabilistic-InPlace, and third-party license notices.

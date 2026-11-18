@@ -1,0 +1,70 @@
+{
+  "figure6_ss": {
+    "events": 10000000,
+    "alphabet": 10000,
+    "topk": 100,
+    "alphas": [
+      0,
+      0.5,
+      1,
+      1.5,
+      2,
+      2.5,
+      3
+    ],
+    "repeats": 3,
+    "base_seed": 2026,
+    "fixed_budgets": [
+      500,
+      1000,
+      2000,
+      4000,
+      8000,
+      10000
+    ],
+    "theory": true,
+    "stream_order": "iid",
+    "validate": true
+  },
+  "window": {
+    "events": 2000000,
+    "alphabet": 10000,
+    "window": 100000,
+    "topk": 20,
+    "alphas": [
+      1,
+      1.5,
+      2
+    ],
+    "repeats": 3,
+    "base_seed": 2026,
+    "budgets": [
+      400,
+      800,
+      1600,
+      3200,
+      6400,
+      10000
+    ],
+    "blocks": [
+      2,
+      4,
+      8
+    ],
+    "query_interval": 50000,
+    "scenarios": [
+      "static",
+      "shift",
+      "gradual",
+      "overlap"
+    ],
+    "validate": true
+  },
+  "rows": {
+    "ss": 147,
+    "window": 1512
+  },
+  "timing_caveat": "Some experiments executed concurrently; rerun sequentially for performance comparisons.",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "compiler": "g++ (Debian 14.2.0-19) 14.2.0"
+}

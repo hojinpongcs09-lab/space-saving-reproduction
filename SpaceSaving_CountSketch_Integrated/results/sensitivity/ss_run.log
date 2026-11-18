@@ -1,0 +1,22 @@
+sweep alpha=0 repeat=0
+sweep alpha=0 repeat=1
+sweep alpha=0 repeat=2
+sweep alpha=0.5 repeat=0
+sweep alpha=0.5 repeat=1
+sweep alpha=0.5 repeat=2
+sweep alpha=1 repeat=0
+sweep alpha=1 repeat=1
+sweep alpha=1 repeat=2
+sweep alpha=1.5 repeat=0
+sweep alpha=1.5 repeat=1
+sweep alpha=1.5 repeat=2
+sweep alpha=2 repeat=0
+sweep alpha=2 repeat=1
+sweep alpha=2 repeat=2
+sweep alpha=2.5 repeat=0
+sweep alpha=2.5 repeat=1
+sweep alpha=2.5 repeat=2
+sweep alpha=3 repeat=0
+sweep alpha=3 repeat=1
+sweep alpha=3 repeat=2
+Saved results/sensitivity/ss_sweep.csv

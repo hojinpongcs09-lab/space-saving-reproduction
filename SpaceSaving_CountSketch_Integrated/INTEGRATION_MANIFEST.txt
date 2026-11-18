@@ -1,0 +1,9 @@
+Integrated from:
+- SpaceSaving_CountSketch_Figure6_MethodAligned_FixedCounter_Comparison.zip
+- SpaceSaving_CountSketch_Windowed_Extension.zip
+
+Canonical source selection:
+- Shared Space-Saving / CountSketch implementation is identical between archives.
+- Newer Figure 6 driver and fixed-counter comparison driver from the FixedCounter archive are used.
+- Windowed algorithm, exact oracle, experiment, tests, documentation and windowed results from the Windowed archive are retained.
+- Both sets of results/configuration/plots are retained under one results/ directory.

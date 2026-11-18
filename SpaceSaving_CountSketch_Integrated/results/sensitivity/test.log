@@ -1,0 +1,22 @@
+PASS: tie-aware metrics (alternative ties, missing mandatory, duplicate, short/long result)
+PASS: Space-Saving / Stream-Summary / error bounds / Top-k checks
+CountSketch Stream-Summary tests passed
+PASS: block rotation, merged bounds, Top-k certification, and exact-window differential tests
+alpha=0 M=500 source=full-alphabet-fallback-alpha-lt-1 true_gap=0 | SS P/R=1/1 t=1.64918ms mem=64136B heap=64048B guarantee=0 | CS P/R=0.05/0.05 t=5.66378ms mem=23288B heap=23088B
+alpha=0.5 M=500 source=full-alphabet-fallback-alpha-lt-1 true_gap=16 | SS P/R=1/1 t=1.94037ms mem=64136B heap=64048B guarantee=1 | CS P/R=0.9/0.9 t=6.88973ms mem=23288B heap=21104B
+alpha=1 M=500 source=technical-report-theorem7 true_gap=6 | SS P/R=1/1 t=2.13601ms mem=64136B heap=64064B guarantee=1 | CS P/R=1/1 t=4.22805ms mem=23288B heap=21120B
+alpha=1.5 M=419 source=technical-report-theorem7 true_gap=26 | SS P/R=1/1 t=1.69271ms mem=53768B heap=53696B guarantee=1 | CS P/R=1/1 t=2.94965ms mem=23288B heap=21104B
+alpha=2 M=178 source=technical-report-theorem7 true_gap=11 | SS P/R=1/1 t=1.26502ms mem=22920B heap=22832B guarantee=1 | CS P/R=1/1 t=2.1544ms mem=23288B heap=21104B
+alpha=2.5 M=115 source=technical-report-theorem7 true_gap=1 | SS P/R=1/1 t=0.917394ms mem=14856B heap=14784B guarantee=1 | CS P/R=1/1 t=2.01473ms mem=23288B heap=20960B
+alpha=3 M=89 source=technical-report-theorem7 true_gap=1 | SS P/R=1/1 t=0.759276ms mem=11528B heap=11456B guarantee=1 | CS P/R=1/1 t=1.90278ms mem=23288B heap=20912B
+Saved results/smoke/measurements.csv
+Generated four grouped-bar panels and allocator auxiliary plot in results/smoke
+scenario=static alpha=1 repeat=0 seed=2026 queries=19 | cumulative P/R=0.984211/0.984211 | bound-aware B=4 P/R=0.842105/0.842105 cert=0 violations=0
+scenario=shift alpha=1 repeat=0 seed=11400714819323198463 queries=19 | cumulative P/R=0.673684/0.673684 | bound-aware B=4 P/R=0.926316/0.926316 cert=0 violations=0
+scenario=gradual alpha=1 repeat=0 seed=11400714819323198463 queries=19 | cumulative P/R=0.705263/0.705263 | bound-aware B=4 P/R=0.910526/0.910526 cert=0 violations=0
+scenario=overlap alpha=1 repeat=0 seed=11400714819323198463 queries=19 | cumulative P/R=0.794737/0.794737 | bound-aware B=4 P/R=0.921053/0.921053 cert=0 violations=0
+scenario=static alpha=1.5 repeat=0 seed=1002029 queries=19 | cumulative P/R=1/1 | bound-aware B=4 P/R=0.963158/0.963158 cert=0 violations=0
+scenario=shift alpha=1.5 repeat=0 seed=11400714819322852920 queries=19 | cumulative P/R=0.710526/0.710526 | bound-aware B=4 P/R=0.994737/0.994737 cert=0 violations=0
+scenario=gradual alpha=1.5 repeat=0 seed=11400714819322852920 queries=19 | cumulative P/R=0.736842/0.736842 | bound-aware B=4 P/R=0.994737/0.994737 cert=0 violations=0
+scenario=overlap alpha=1.5 repeat=0 seed=11400714819322852920 queries=19 | cumulative P/R=0.805263/0.805263 | bound-aware B=4 P/R=0.994737/0.994737 cert=0 violations=0
+Saved results/windowed/smoke.csv

@@ -1,0 +1,29 @@
+{
+  "paper": "Metwally et al ICDT 2005 Figure 6 (not original code/data)",
+  "events_per_trial": 10000000,
+  "alphabet": 10000,
+  "k": 100,
+  "alphas": [
+    0.0,
+    0.5,
+    1.0,
+    1.5,
+    2.0,
+    2.5,
+    3.0
+  ],
+  "repeats": 3,
+  "base_seed": 2026,
+  "generator": "Vose alias IID Zipf, iid arrival",
+  "ss_budget": "Theorem 7 finite alphabet sufficient formula alpha>=1; full alphabet alpha<1",
+  "cs_sketch": {
+    "width": 8192,
+    "depth": 7,
+    "delta_target_unverified": 0.01,
+    "candidates": 100,
+    "data_structure": "Stream-Summary"
+  },
+  "compiler": "g++ (Debian 14.2.0-19) 14.2.0",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "plot_metric_memory": "estimated owned data structure bytes; allocator-live heap delta also reported"
+}

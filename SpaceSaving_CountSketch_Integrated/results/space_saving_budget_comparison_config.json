@@ -1,0 +1,27 @@
+{
+  "experiment": "paired Space-Saving counter-budget policy comparison",
+  "purpose": "Compare alpha-specific theorem-guided Space-Saving capacity with a constant Space-Saving counter capacity across all Zipf alpha values",
+  "events_per_trial": 10000000,
+  "alphabet": 10000,
+  "topk": 100,
+  "alphas": [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0],
+  "repeats": 3,
+  "base_seed": 2026,
+  "stream_order": "iid",
+  "policies": {
+    "alpha_specific": "Theorem-7 sufficient bound for alpha >= 1; full-alphabet fallback for alpha < 1",
+    "fixed": {
+      "counters": 1000,
+      "selection_basis": "Pre-existing project diagnostic budget; selected before the runs; >= topk",
+      "paper_parameter": false,
+      "ground_truth_tuned": false
+    }
+  },
+  "pairing": "Both policies process the exact same generated event vector and use the same exact Top-100 ground truth for each alpha/repeat seed.",
+  "countsketch_included": false,
+  "notes": [
+    "This is a supplementary Space-Saving-only experiment, not a replacement for the Figure 6 replication.",
+    "The fixed 1000-counter budget is a project-selected diagnostic setting, not specified by the original paper.",
+    "The alpha-specific policy is based on the UCSB 2005-23 technical report Theorem 7 proof and its documented alpha<1 fallback."
+  ]
+}
