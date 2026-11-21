@@ -1,0 +1,3 @@
+source_ip,final_true_count,true_threshold_packet,rule,first_alert_packet,false_alert,first_detection_packet,delay_packets,missed
+192.0.2.1,6,5,estimate,5,0,5,0,0
+192.0.2.1,6,5,lower,5,0,5,0,0

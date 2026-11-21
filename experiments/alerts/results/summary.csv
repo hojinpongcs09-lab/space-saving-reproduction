@@ -1,0 +1,9 @@
+scenario,counters,threshold,rule,false_alert_sources,eligible_sources,detected_sources,missed_sources,coverage,mean_delay_packets,paired_detected_sources,paired_mean_delay_packets
+steady,4,5,estimate,0,1,1,0,1.0,0.0,1,0.0
+steady,4,5,lower,0,1,1,0,1.0,0.0,1,0.0
+churn,4,5,estimate,4,0,0,0,,,0,
+churn,4,5,lower,0,0,0,0,,,0,
+returning,4,5,estimate,5,1,1,0,1.0,0.0,1,0.0
+returning,4,5,lower,0,1,1,0,1.0,1.0,1,1.0
+missed,4,5,estimate,5,1,1,0,1.0,0.0,0,
+missed,4,5,lower,0,1,0,1,0.0,,0,

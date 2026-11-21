@@ -34,6 +34,14 @@
 2. **並行開發**：A 提供更新程式與手算測試，B 提供資料和精確達標序號，C 先用小樣本完成批次實驗框架。
 3. **整合驗證**：三人核對小樣本的誤差界、誤報、漏報和延遲，再執行完整參數組合並整理報告。
 
+## D10 小型告警驗證
+
+[`experiments/alerts/`](experiments/alerts/) 提供兩種門檻告警規則的逐筆驗證：固定 4 個計數器與 T=5，包含持續出現、計數器替換、來源返回與觀察結束時漏報的案例，以及可重建的 CSV 與測試。
+
+```sh
+make -C experiments/alerts reproduce
+```
+
 ## Fig. 6 重現與 D10 基礎
 
 [`figure6/`](figure6/) 收錄[@Akhilesh1004](https://github.com/Akhilesh1004)的 Space-Saving 與 CountSketch 實驗，包含 C++ 實作、Zipf 合成資料生成器、測試、繪圖程式和已量測結果。Fig. 6 在整串資料處理完後比較 Top-100。D10 可以沿用 Space-Saving 的估計值與誤差下界，以及同一套資料生成方式，再加入逐筆告警與精確達標序號。
