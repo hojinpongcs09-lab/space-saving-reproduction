@@ -97,3 +97,17 @@ sensitivity:
 	$(MAKE) sensitivity-ss
 	$(MAKE) sensitivity-window
 	$(MAKE) sensitivity-plot
+
+# Hand-checkable window examples; checks stay active even with -DNDEBUG.
+.PHONY: windowed-walkthrough test-windowed-walkthrough
+build/windowed_walkthrough: tests/windowed_walkthrough.cpp src/windowed_space_saving.cpp src/space_saving.cpp include/windowed_space_saving.hpp include/exact_sliding_window.hpp include/space_saving.hpp | build
+	$(CXX) $(CXXFLAGS) tests/windowed_walkthrough.cpp src/windowed_space_saving.cpp src/space_saving.cpp -o $@
+
+test: test-windowed-walkthrough
+
+test-windowed-walkthrough: build/windowed_walkthrough
+	./build/windowed_walkthrough
+
+windowed-walkthrough: build/windowed_walkthrough
+	mkdir -p results/validation
+	./build/windowed_walkthrough --write-results

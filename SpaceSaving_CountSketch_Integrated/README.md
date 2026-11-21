@@ -202,3 +202,14 @@ make sensitivity-plot
 ```
 
 Full settings and metric definitions: `docs/SENSITIVITY_PROTOCOL.md`. The expanded sweeps deliberately include the full-alphabet cumulative counter capacity of 10,000. For windowing, 10,000 is the TOTAL across all blocks, not the per-block capacity; it need not give exact frequencies. Figure 6's alpha-specific policy remains unchanged, including its full-alphabet fallback for alpha < 1. Counter budgets are project parameters, not recovered original-paper settings.
+
+## 文獻對照與小型視窗驗證
+
+- [Sliding Window 文獻與現有方法對照](docs/SLIDING_WINDOW_PAPER_COMPARISON_ZH.md)
+- [可手算案例與重跑方式](examples/windowed_validation/README.md)
+- [驗證結果表](results/validation/WALKTHROUGH_ZH.md)
+- [本次工作與驗證結論](docs/WINDOWED_VALIDATION_CONTRIBUTION_ZH.md)
+
+```sh
+make test windowed-walkthrough
+```

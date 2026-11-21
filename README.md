@@ -51,3 +51,11 @@
 - [Space-Saving 原論文（ICDT 2005）](https://link.springer.com/chapter/10.1007/978-3-540-30570-5_27)
 - [byronknoll 的 C++ Space-Saving 實作](https://github.com/byronknoll/space-saving)
 - [Frequent Items 演算法比較套件](https://hadjieleftheriou.com/frequent-items/)
+
+## Sliding Window 文獻與正確性驗證
+
+[文獻對照與工作說明](SpaceSaving_CountSketch_Integrated/docs/WINDOWED_VALIDATION_CONTRIBUTION_ZH.md)整理 FSP／FSW 與本專題區塊視窗的差異，並提供可手算的區塊淘汰、流量切換與頻率上下界驗證。
+
+```sh
+make -C SpaceSaving_CountSketch_Integrated test windowed-walkthrough
+```
