@@ -224,3 +224,14 @@ at-full-boundary subset where the interval baseline represents exactly W.
 The old sensitivity CSVs have not been automatically relabeled or fabricated.
 
 [Periodic-reset experiment findings](results/periodic/RESULTS_SUMMARY.md).
+
+## 文獻對照與小型視窗驗證
+
+- [Sliding Window 文獻與現有方法對照](docs/SLIDING_WINDOW_PAPER_COMPARISON_ZH.md)
+- [可手算案例與重跑方式](examples/windowed_validation/README.md)
+- [驗證結果表](results/validation/WALKTHROUGH_ZH.md)
+- [本次工作與驗證結論](docs/WINDOWED_VALIDATION_CONTRIBUTION_ZH.md)
+
+```sh
+make test windowed-walkthrough
+```
