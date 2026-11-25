@@ -21,6 +21,7 @@ def main():
     metrics = [
         "precision", "recall", "certification_rate", "order_certification_rate",
         "detection_coverage", "avg_detection_delay_packets", "runtime_ms", "memory_bytes",
+        "observed_window_fraction", "full_window_query_rate", "aligned_tie_recall",
     ]
     group_cols = ["scenario", "alpha", "method", "blocks"]
     summary = df.groupby(group_cols)[metrics].agg(["mean", "std"]).reset_index()
@@ -32,6 +33,7 @@ def main():
 
     labels = {
         "Cumulative-SpaceSaving": "Cumulative SS",
+        "Periodic-Reset-SpaceSaving": "Periodic reset",
         "Naive-Block-Merge": "Naive block merge",
         "Bound-Aware-Block-Merge": "Bound-aware merge",
     }
@@ -42,6 +44,8 @@ def main():
         ("order_certification_rate", "Certified Returned-Order Rate", "rate"),
         ("runtime_ms", "Update + Query Runtime (ms)", "ms"),
         ("memory_bytes", "Persistent Algorithm Memory (bytes)", "bytes"),
+        ("observed_window_fraction", "Mean fraction of W represented", "fraction"),
+        ("aligned_tie_recall", "Tie-aware Recall at full W boundaries only", "rate"),
     ]
     scenarios = sorted(df["scenario"].unique())
     for scenario in scenarios:
@@ -54,7 +58,7 @@ def main():
                     subset = method_rows[method_rows["alpha"] == alpha].groupby("blocks")[metric].mean()
                     if subset.empty:
                         continue
-                    xs = [1 if int(b) == 0 else int(b) for b in subset.index]
+                    xs = [0.5 if method == "Periodic-Reset-SpaceSaving" else 1 if int(b) == 0 else int(b) for b in subset.index]
                     order = sorted(range(len(xs)), key=lambda i: xs[i])
                     xs = [xs[i] for i in order]
                     ys = [float(subset.iloc[i]) for i in order]
@@ -64,7 +68,7 @@ def main():
             ax.set_ylabel(ylabel)
             if metric == "avg_detection_delay_packets":
                 ax.set_yscale("symlog", linthresh=1000)
-            ax.set_xticks([1, 2, 4, 8], ["Cumulative", "B=2", "B=4", "B=8"])
+            ax.set_xticks([0.5, 1, 2, 4, 8], ["Periodic", "Cumulative", "B=2", "B=4", "B=8"])
             ax.grid(True, alpha=0.25)
             ax.legend(fontsize=7, ncol=2)
             fig.tight_layout()
@@ -84,7 +88,7 @@ def main():
                         subset = method_rows[method_rows["alpha"] == alpha].groupby("blocks")[metric].mean()
                         if subset.empty:
                             continue
-                        xs = [1 if int(b) == 0 else int(b) for b in subset.index]
+                        xs = [0.5 if method == "Periodic-Reset-SpaceSaving" else 1 if int(b) == 0 else int(b) for b in subset.index]
                         order = sorted(range(len(xs)), key=lambda i: xs[i])
                         xs = [xs[i] for i in order]
                         ys = [float(subset.iloc[i]) for i in order]
@@ -94,7 +98,7 @@ def main():
                 ax.set_ylabel(ylabel)
                 if metric == "avg_detection_delay_packets":
                     ax.set_yscale("symlog", linthresh=1000)
-                ax.set_xticks([1, 2, 4, 8], ["Cumulative", "B=2", "B=4", "B=8"])
+                ax.set_xticks([0.5, 1, 2, 4, 8], ["Periodic", "Cumulative", "B=2", "B=4", "B=8"])
                 ax.grid(True, alpha=0.25)
                 ax.legend(fontsize=7, ncol=2)
                 fig.tight_layout()

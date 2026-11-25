@@ -28,3 +28,21 @@ Query-sampled delay: for each new-half ID ever entering exact Top-k on a query, 
 ## Measurement limitations
 
 Persistent owned bytes (excluding allocator metadata, temporary merge workspace, raw input, and exact oracle), as in previous project. Equal counters are not the same as equal bytes. Separate update and query wall times; per-event timer overhead is present in window benchmark. Window naive/bound share the same update path but time their queries separately. Use clean sequential `make sensitivity` on target Linux for report-quality timings; container measurements can be noisy, especially if concurrently executed. Three seeds characterize the tested synthetic cases only. Cumulative remains a historical reference, not a same-window algorithm. Exact sliding window is the oracle, not a resource-matched baseline. No new published methods are implemented. Figure 6 remains partial replication (Probabilistic-InPlace omitted).
+
+## Periodic-reset baseline added in follow-up
+
+The initial sensitivity CSV (`results/sensitivity/window_sweep.csv`) has seven
+methods per run and **does not contain Periodic Reset**. This archive is retained
+for provenance; do not interpret absence as zero accuracy. `make periodic-comparison`
+produces a separate fully paired experiment (the original default M=1600) with
+an eighth method `Periodic-Reset-SpaceSaving`, plus `observed_window_fraction`,
+`full_window_query_rate`, and aligned-only accuracy columns for all methods.
+For a full six-budget rerun, `make sensitivity-window` regenerates the budget
+CSVs, and `make sensitivity-plot` merges them into the new eight-method sweep.
+
+At t=nW, Periodic Reset queries **before** the first update of the next interval.
+At t=nW+W/2, it covers W/2 events and is compared to the same latest-W oracle
+as every other method. This is a deliberate tumbling-vs-sliding comparison,
+not an apples-to-apples comparison of exact window coverage. Read the all-query
+and aligned-only reports together. Memory budget M is the same for cumulative,
+periodic, and block families; equal M does not imply equal allocated bytes.

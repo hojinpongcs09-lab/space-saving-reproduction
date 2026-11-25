@@ -34,10 +34,11 @@ for metric,label in [('tie_recall','Tie-aware Recall'),('runtime_ms','Runtime (m
 files=sorted(root.glob('window_M*.csv'))
 assert len(files)==6, 'Window sweep incomplete'
 w=pd.concat([pd.read_csv(f) for f in files],ignore_index=True)
-assert len(w)==1512 and not w.duplicated(['scenario','alpha','repeat','method','blocks','total_counters']).any(), 'Window sweep incomplete'
+assert len(w) in (1512,1728) and not w.duplicated(['scenario','alpha','repeat','method','blocks','total_counters']).any(), 'Window sweep incomplete'
 assert w[w.method=='Bound-Aware-Block-Merge'].bound_violations.sum()==0
 w.to_csv(root/'window_sweep.csv',index=False)
 metrics=['precision','recall','tie_precision','tie_recall','topk_set_valid_rate','certification_rate','order_certification_rate','avg_bound_width_per_returned_item','update_ms','query_ms','runtime_ms','memory_bytes','detection_coverage','avg_detection_delay_packets','missed_entries']
+metrics += [c for c in ('observed_window_fraction','full_window_query_rate','aligned_tie_recall','aligned_topk_set_valid_rate') if c in w.columns]
 summarize(w,['scenario','alpha','total_counters','method','blocks'],metrics,'window_summary.csv')
 # Facets by scenario at each alpha; no averaging over counter budgets or skew.
 for alpha,g in w.groupby('alpha'):
@@ -48,7 +49,7 @@ for alpha,g in w.groupby('alpha'):
             for (method,b),d in g[g.scenario==scenario].groupby(['method','blocks']):
                 s=d.groupby('total_counters')[metric].mean().dropna()
                 if s.empty: continue
-                name='Cumulative' if not b else ('Naive' if method.startswith('Naive') else 'Bound')+f' B={b}'
+                name=('Periodic reset' if method.startswith('Periodic') else 'Cumulative') if not b else ('Naive' if method.startswith('Naive') else 'Bound')+f' B={b}'
                 ax.plot(s.index,s.values,'o-',label=name,markersize=3)
             ax.set_title(scenario); ax.set_xlabel('Total counters M'); ax.set_xscale('log'); ax.set_xticks([400,800,1600,3200,6400,10000],['400','800','1.6k','3.2k','6.4k','10k'],rotation=30); ax.grid(alpha=.25)
         axes[0].set_ylabel(label); axes[-1].legend(fontsize=7); fig.suptitle(f'Window sensitivity | α={alpha:g} | {label}')

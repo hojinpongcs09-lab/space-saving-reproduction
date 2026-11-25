@@ -20,7 +20,7 @@ build/test_space_saving: tests/test_space_saving.cpp src/space_saving.cpp includ
 build/test_count_sketch: tests/test_count_sketch.cpp src/count_sketch.cpp include/count_sketch.hpp | build
 	$(CXX) $(CXXFLAGS) tests/test_count_sketch.cpp src/count_sketch.cpp -o $@
 
-build/windowed_experiment: src/windowed_experiment.cpp src/windowed_space_saving.cpp src/space_saving.cpp include/windowed_space_saving.hpp include/exact_sliding_window.hpp include/space_saving.hpp | build
+build/windowed_experiment: src/windowed_experiment.cpp src/windowed_space_saving.cpp src/space_saving.cpp include/windowed_space_saving.hpp include/periodic_reset_space_saving.hpp include/exact_sliding_window.hpp include/space_saving.hpp | build
 	$(CXX) $(CXXFLAGS) src/windowed_experiment.cpp src/windowed_space_saving.cpp src/space_saving.cpp -o $@
 
 build/test_windowed_space_saving: tests/test_windowed_space_saving.cpp src/windowed_space_saving.cpp src/space_saving.cpp include/windowed_space_saving.hpp include/exact_sliding_window.hpp include/space_saving.hpp | build
@@ -76,7 +76,15 @@ build/test_topk_metrics: tests/test_topk_metrics.cpp include/topk_metrics.hpp | 
 test-ties: build/test_topk_metrics
 	./build/test_topk_metrics
 
-test: test-ties
+test: test-ties test-periodic
+
+build/test_periodic_reset_space_saving: tests/test_periodic_reset_space_saving.cpp src/space_saving.cpp include/periodic_reset_space_saving.hpp include/space_saving.hpp | build
+	$(CXX) $(CXXFLAGS) tests/test_periodic_reset_space_saving.cpp src/space_saving.cpp -o $@
+
+.PHONY: test-periodic
+test-periodic: build/test_periodic_reset_space_saving
+	./build/test_periodic_reset_space_saving
+
 
 build/figure6_comparison build/windowed_experiment: include/topk_metrics.hpp
 
@@ -98,16 +106,12 @@ sensitivity:
 	$(MAKE) sensitivity-window
 	$(MAKE) sensitivity-plot
 
-# Hand-checkable window examples; checks stay active even with -DNDEBUG.
-.PHONY: windowed-walkthrough test-windowed-walkthrough
-build/windowed_walkthrough: tests/windowed_walkthrough.cpp src/windowed_space_saving.cpp src/space_saving.cpp include/windowed_space_saving.hpp include/exact_sliding_window.hpp include/space_saving.hpp | build
-	$(CXX) $(CXXFLAGS) tests/windowed_walkthrough.cpp src/windowed_space_saving.cpp src/space_saving.cpp -o $@
-
-test: test-windowed-walkthrough
-
-test-windowed-walkthrough: build/windowed_walkthrough
-	./build/windowed_walkthrough
-
-windowed-walkthrough: build/windowed_walkthrough
-	mkdir -p results/validation
-	./build/windowed_walkthrough --write-results
+# Run the periodic baseline and other windowed methods under identical query
+# times, then validate that the periodic summary covers the full W only at
+# multiples of W. Output goes to a new CSV, preserving historical results.
+.PHONY: periodic-comparison
+periodic-comparison: build/windowed_experiment
+	mkdir -p results/periodic
+	./build/windowed_experiment --validate --output results/periodic/windowed_with_periodic.csv
+	$(PYTHON) scripts/check_periodic_csv.py results/periodic/windowed_with_periodic.csv
+	$(PYTHON) scripts/plot_windowed_results.py --csv results/periodic/windowed_with_periodic.csv --outdir results/periodic/plots

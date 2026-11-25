@@ -1,0 +1,9 @@
+method,blocks,mean_recall,aligned_recall,mean_window_coverage
+Bound-Aware-Block-Merge,2,1.0,1.0,1.0
+Bound-Aware-Block-Merge,4,1.0,1.0,1.0
+Bound-Aware-Block-Merge,8,0.9987891741666667,0.9984027777777779,1.0
+Cumulative-SpaceSaving,0,0.791346153611111,0.7921527777777777,1.0
+Naive-Block-Merge,2,1.0,1.0,1.0
+Naive-Block-Merge,4,0.9999643874999999,1.0,1.0
+Naive-Block-Merge,8,0.9992877494444444,0.9992361111111112,1.0
+Periodic-Reset-SpaceSaving,0,0.9911680902777777,1.0,0.75641026

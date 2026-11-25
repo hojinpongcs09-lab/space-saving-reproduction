@@ -2,6 +2,7 @@
 #include <limits>
 #include "exact_sliding_window.hpp"
 #include "space_saving.hpp"
+#include "periodic_reset_space_saving.hpp"
 #include "windowed_space_saving.hpp"
 
 #include <algorithm>
@@ -25,6 +26,7 @@ using Clock = std::chrono::steady_clock;
 using space_saving::BlockWindowedSpaceSaving;
 using space_saving::ExactSlidingWindow;
 using space_saving::SpaceSaving;
+using space_saving::PeriodicResetSpaceSaving;
 
 namespace {
 struct Options {
@@ -78,6 +80,9 @@ Scenarios:
 
 Methods:
   Cumulative-SpaceSaving: one summary over the entire history.
+  Periodic-Reset-SpaceSaving: one summary reset every W packets; its
+    coverage is only (t mod W) packets at intermediate query points.
+    At multiples of W, query happens BEFORE the next interval is reset.
   Naive-Block-Merge: sum only stored per-block counts; missing entries add zero.
   Bound-Aware-Block-Merge: merge conservative per-block lower/upper bounds;
     rank candidates by interval midpoint and certify Top-k membership only
@@ -191,6 +196,12 @@ struct MethodMetrics {
     std::uint64_t bound_width_item_count = 0;
     std::uint64_t query_count = 0;
     std::uint64_t candidate_sum = 0;
+    std::uint64_t aligned_query_count = 0;
+    std::uint64_t full_window_query_count = 0;
+    double window_coverage_sum = 0;
+    double aligned_precision_sum = 0, aligned_recall_sum = 0;
+    double aligned_tie_precision_sum = 0, aligned_tie_recall_sum = 0;
+    double aligned_valid_sum = 0;
     std::uint64_t bound_violations = 0;
     std::size_t memory_bytes = 0;
     std::unordered_map<std::uint32_t, std::uint64_t> true_entry_time;
@@ -282,6 +293,10 @@ struct RunRow {
     std::uint64_t query_count = 0;
     double update_ms = 0, query_ms = 0, precision = 0, recall = 0;
     double tie_precision=0,tie_recall=0,valid_rate=0;
+    double observed_window_fraction=0,full_window_query_rate=0;
+    std::uint64_t aligned_query_count=0;
+    double aligned_precision=0, aligned_recall=0, aligned_tie_precision=0;
+    double aligned_tie_recall=0, aligned_topk_set_valid_rate=0;
     double certification_rate = 0, order_certification_rate = 0, avg_bound_width = 0;
     double detection_coverage = 0, avg_detection_delay = 0;
     std::uint64_t missed_entries = 0, bound_violations = 0;
@@ -300,6 +315,7 @@ RunRow finalize(const MethodMetrics& m, const Options& o, const std::string& sce
     row.events = o.events; row.alphabet = o.alphabet; row.window = o.window;
     row.counters = o.counters; row.topk = o.topk; row.query_interval = o.query_interval;
     row.shift_at = shift_at; row.query_count = m.query_count;
+    row.aligned_query_count = m.aligned_query_count;
     row.update_ms = m.update_ms; row.query_ms = m.query_ms;
     if (m.query_count) {
         row.precision = m.precision_sum / m.query_count;
@@ -311,6 +327,18 @@ RunRow finalize(const MethodMetrics& m, const Options& o, const std::string& sce
         row.order_certification_rate = m.order_certification_sum / m.query_count;
         row.avg_bound_width = m.bound_width_item_count ? m.bound_width_sum / m.bound_width_item_count : 0.0;
         row.avg_candidates = static_cast<double>(m.candidate_sum) / m.query_count;
+        row.observed_window_fraction = m.window_coverage_sum / m.query_count;
+        row.full_window_query_rate = static_cast<double>(m.full_window_query_count) / m.query_count;
+    }
+    if (m.aligned_query_count) {
+        row.aligned_precision = m.aligned_precision_sum / m.aligned_query_count;
+        row.aligned_recall = m.aligned_recall_sum / m.aligned_query_count;
+        row.aligned_tie_precision = m.aligned_tie_precision_sum / m.aligned_query_count;
+        row.aligned_tie_recall = m.aligned_tie_recall_sum / m.aligned_query_count;
+        row.aligned_topk_set_valid_rate = m.aligned_valid_sum / m.aligned_query_count;
+    } else {
+        row.aligned_precision = row.aligned_recall = row.aligned_tie_precision =
+            row.aligned_tie_recall = row.aligned_topk_set_valid_rate = std::numeric_limits<double>::quiet_NaN();
     }
     if(method!="Bound-Aware-Block-Merge") {
         row.certification_rate=row.order_certification_rate=row.avg_bound_width=std::numeric_limits<double>::quiet_NaN();
@@ -342,7 +370,10 @@ void write_row(std::ofstream& out, const RunRow& r) {
         << r.update_ms + r.query_ms << ',' << r.precision << ',' << r.recall << ','
         << r.certification_rate << ',' << r.order_certification_rate << ',' << r.avg_bound_width << ','
         << r.detection_coverage << ',' << r.avg_detection_delay << ',' << r.missed_entries << ','
-        << r.bound_violations << ',' << r.avg_candidates << ',' << r.memory_bytes << ',' <<r.tie_precision<<','<<r.tie_recall<<','<<r.valid_rate<<'\n';
+        << r.bound_violations << ',' << r.avg_candidates << ',' << r.memory_bytes << ',' <<r.tie_precision<<','<<r.tie_recall<<','<<r.valid_rate<<','
+        << r.observed_window_fraction << ',' << r.full_window_query_rate << ',' << r.aligned_query_count << ','
+        << r.aligned_precision << ',' << r.aligned_recall << ',' << r.aligned_tie_precision << ','
+        << r.aligned_tie_recall << ',' << r.aligned_topk_set_valid_rate << '\n';
 }
 
 void run_one(const Options& o, const std::string& scenario, double alpha,
@@ -371,6 +402,7 @@ void run_one(const Options& o, const std::string& scenario, double alpha,
     }
 
     SpaceSaving cumulative(o.counters);
+    PeriodicResetSpaceSaving periodic(o.window, o.counters);
     ExactSlidingWindow exact(o.window);
     std::vector<std::size_t> block_counts{2, 4, 8};
     std::vector<std::unique_ptr<BlockWindowedSpaceSaving>> windowed;
@@ -380,6 +412,8 @@ void run_one(const Options& o, const std::string& scenario, double alpha,
 
     MethodMetrics cumulative_metrics;
     cumulative_metrics.memory_bytes = cumulative.allocated_bytes();
+    MethodMetrics periodic_metrics;
+    periodic_metrics.memory_bytes = periodic.allocated_bytes();
     std::vector<MethodMetrics> naive_metrics(block_counts.size()), bound_metrics(block_counts.size());
     for (std::size_t i = 0; i < block_counts.size(); ++i) {
         naive_metrics[i].memory_bytes = windowed[i]->allocated_bytes();
@@ -393,6 +427,10 @@ void run_one(const Options& o, const std::string& scenario, double alpha,
         cumulative.update(id);
         auto t1 = Clock::now();
         cumulative_metrics.update_ms += std::chrono::duration<double, std::milli>(t1 - t0).count();
+        t0 = Clock::now();
+        periodic.update(id); // Reset before the first packet of the next W interval.
+        t1 = Clock::now();
+        periodic_metrics.update_ms += std::chrono::duration<double, std::milli>(t1 - t0).count();
 
         for (std::size_t b = 0; b < windowed.size(); ++b) {
             t0 = Clock::now();
@@ -412,9 +450,22 @@ void run_one(const Options& o, const std::string& scenario, double alpha,
         const auto kth=truth_top.empty()?0:truth_top.back().count;
         std::size_t mandatory=0;
         for(auto& x:truth_top) mandatory+=x.count>kth;
-        auto add_tie=[&](MethodMetrics& m,const auto& items){
+        // Common oracle and query positions for all methods. Periodic Reset is
+        // intentionally partial-window at non-multiples of W, not mislabeled
+        // as an exact sliding-window method.
+        auto add_accuracy=[&](MethodMetrics& m,const auto& items,std::uint64_t observed_span){
+            const auto basic = score(items,truth_set);
             const auto tie=space_saving::tie_metrics(items,truth_top.size(),kth,mandatory,[&](auto id){return exact.count(id);});
+            m.precision_sum+=basic.first; m.recall_sum+=basic.second;
             m.tie_precision_sum+=tie.precision; m.tie_recall_sum+=tie.recall; m.valid_sum+=tie.valid;
+            m.window_coverage_sum+=static_cast<double>(observed_span)/o.window;
+            if (observed_span == o.window) ++m.full_window_query_count;
+            if (packet_index % o.window == 0) {
+                ++m.aligned_query_count;
+                m.aligned_precision_sum+=basic.first; m.aligned_recall_sum+=basic.second;
+                m.aligned_tie_precision_sum+=tie.precision; m.aligned_tie_recall_sum+=tie.recall;
+                m.aligned_valid_sum+=tie.valid;
+            }
         };
 
         // Cumulative Space-Saving baseline.
@@ -423,10 +474,7 @@ void run_one(const Options& o, const std::string& scenario, double alpha,
         t1 = Clock::now();
         cumulative_metrics.query_ms += std::chrono::duration<double, std::milli>(t1 - t0).count();
         const auto cumulative_ids = ids_of(cumulative_top.elements);
-        const auto cumulative_score = score(cumulative_top.elements, truth_set);
-        add_tie(cumulative_metrics,cumulative_top.elements);
-        cumulative_metrics.precision_sum += cumulative_score.first;
-        cumulative_metrics.recall_sum += cumulative_score.second;
+        add_accuracy(cumulative_metrics, cumulative_top.elements, o.window);
         cumulative_metrics.certification_sum += cumulative_top.guaranteed_topk_strict ? 1.0 : 0.0;
         cumulative_metrics.order_certification_sum += cumulative_top.guaranteed_order ? 1.0 : 0.0;
         for (const auto& x : cumulative_top.elements) {
@@ -438,6 +486,21 @@ void run_one(const Options& o, const std::string& scenario, double alpha,
         if (scenario != "static")
             update_detection(cumulative_metrics, cumulative_ids, truth_set, packet_index, new_id_begin);
 
+        // Tumbling (periodic-reset) baseline. No reset occurs until the first
+        // packet of the NEXT interval, so aligned queries include all W events.
+        t0 = Clock::now();
+        const auto periodic_top = periodic.query_top_k(o.topk);
+        t1 = Clock::now();
+        periodic_metrics.query_ms += std::chrono::duration<double, std::milli>(t1-t0).count();
+        const auto periodic_ids = ids_of(periodic_top.elements);
+        add_accuracy(periodic_metrics, periodic_top.elements, periodic.active_span());
+        periodic_metrics.candidate_sum += periodic.monitored_count();
+        ++periodic_metrics.query_count;
+        if (scenario != "static")
+            update_detection(periodic_metrics, periodic_ids, truth_set, packet_index, new_id_begin);
+        if (o.validate && !periodic.validate())
+            throw std::runtime_error("periodic-reset invariant failed");
+
         for (std::size_t b = 0; b < windowed.size(); ++b) {
             if (!windowed[b]->ready())
                 throw std::runtime_error("query point is not aligned for B=" + std::to_string(block_counts[b]));
@@ -448,10 +511,7 @@ void run_one(const Options& o, const std::string& scenario, double alpha,
             t1 = Clock::now();
             naive_metrics[b].query_ms += std::chrono::duration<double, std::milli>(t1 - t0).count();
             const auto naive_ids = ids_of(naive_top);
-            const auto naive_score = score(naive_top, truth_set);
-            add_tie(naive_metrics[b],naive_top);
-            naive_metrics[b].precision_sum += naive_score.first;
-            naive_metrics[b].recall_sum += naive_score.second;
+            add_accuracy(naive_metrics[b], naive_top, o.window);
             ++naive_metrics[b].query_count;
             if (scenario != "static")
                 update_detection(naive_metrics[b], naive_ids, truth_set, packet_index, new_id_begin);
@@ -462,10 +522,7 @@ void run_one(const Options& o, const std::string& scenario, double alpha,
             t1 = Clock::now();
             bound_metrics[b].query_ms += std::chrono::duration<double, std::milli>(t1 - t0).count();
             const auto bounded_ids = ids_of(bounded_top.elements);
-            const auto bounded_score = score(bounded_top.elements, truth_set);
-            add_tie(bound_metrics[b],bounded_top.elements);
-            bound_metrics[b].precision_sum += bounded_score.first;
-            bound_metrics[b].recall_sum += bounded_score.second;
+            add_accuracy(bound_metrics[b], bounded_top.elements, o.window);
             bound_metrics[b].certification_sum += bounded_top.membership_certified ? 1.0 : 0.0;
             bound_metrics[b].order_certification_sum += bounded_top.order_certified ? 1.0 : 0.0;
             for (const auto& x : bounded_top.elements) {
@@ -506,6 +563,9 @@ void run_one(const Options& o, const std::string& scenario, double alpha,
 
     write_row(csv, finalize(cumulative_metrics, o, scenario, alpha, repeat, seed,
                            "Cumulative-SpaceSaving", 0, shift_at));
+    periodic_metrics.memory_bytes = periodic.allocated_bytes();
+    write_row(csv, finalize(periodic_metrics, o, scenario, alpha, repeat, seed,
+                           "Periodic-Reset-SpaceSaving", 0, shift_at));
     for (std::size_t b = 0; b < block_counts.size(); ++b) {
         write_row(csv, finalize(naive_metrics[b], o, scenario, alpha, repeat, seed,
                                "Naive-Block-Merge", block_counts[b], shift_at));
@@ -537,7 +597,10 @@ int main(int argc, char** argv) {
                "total_counters,topk,query_interval,shift_at,query_count,update_ms,query_ms,runtime_ms,"
                "precision,recall,certification_rate,order_certification_rate,avg_bound_width_per_returned_item,"
                "detection_coverage,avg_detection_delay_packets,missed_entries,bound_violations,"
-               "avg_candidates,memory_bytes,tie_precision,tie_recall,topk_set_valid_rate\n";
+               "avg_candidates,memory_bytes,tie_precision,tie_recall,topk_set_valid_rate,"
+               "observed_window_fraction,full_window_query_rate,aligned_query_count,"
+               "aligned_precision,aligned_recall,aligned_tie_precision,aligned_tie_recall,"
+               "aligned_topk_set_valid_rate\n";
         csv << std::fixed << std::setprecision(8);
 
         for (std::size_t ai = 0; ai < o.alphas.size(); ++ai) {

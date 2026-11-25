@@ -5,6 +5,7 @@ A single C++17 project containing:
 1. A method-aligned independent implementation and partial reproduction of Figure 6 from Metwally, Agrawal and El Abbadi (ICDT 2005).
 2. A paired **Space-Saving-only** experiment comparing the α-specific counter policy with a fixed 1,000-counter policy. CountSketch is not part of this supplementary experiment.
 3. A block-aligned Windowed Space-Saving extension for recent Top-k Flow monitoring, including conservative frequency-bound aggregation and Top-k membership/order certification.
+4. A **Periodic-Reset-SpaceSaving** tumbling-window baseline at the same common query times. At interval boundaries it covers W packets; halfway through it covers only the current partial interval. The CSV explicitly tracks coverage and also supplies aligned-only accuracy metrics.
 
 > **Scope:** This is not the original authors' source code and does not claim numerical reproduction of every Figure 6 bar. Probabilistic-InPlace is not implemented. All project-selected settings are identified below and in the CSV/configuration outputs.
 
@@ -17,13 +18,15 @@ make -j4 all
 make test
 ```
 
-The build produces four executables:
+The build produces these executables:
 
 - `build/figure6_comparison`
 - `build/test_space_saving`
 - `build/test_count_sketch`
 - `build/windowed_experiment`
 - `build/test_windowed_space_saving`
+- `build/test_topk_metrics`
+- `build/test_periodic_reset_space_saving`
 
 ## Experiments
 
@@ -74,6 +77,7 @@ Outputs:
 make windowed-smoke
 make windowed-experiment
 make windowed-plot
+make periodic-comparison
 ```
 
 Default project settings:
@@ -96,8 +100,9 @@ The method keeps `B` independent Space-Saving summaries, each representing one n
 Three approximate methods are evaluated:
 
 1. **Cumulative-SpaceSaving**: one summary over all historical packets.
-2. **Naive-Block-Merge**: sums stored counts; a missing per-block candidate contributes zero. This is a deliberately non-certified baseline.
-3. **Bound-Aware-Block-Merge**: merges conservative lower/upper frequency bounds and reports whether Top-k membership/order can be certified.
+2. **Periodic-Reset-SpaceSaving**: one M-counter summary that resets every W packets; compared against exact latest-W at all common query points while explicitly recording its partial-window coverage.
+3. **Naive-Block-Merge**: sums stored counts; a missing per-block candidate contributes zero. This is a deliberately non-certified baseline.
+4. **Bound-Aware-Block-Merge**: merges conservative lower/upper frequency bounds and reports whether Top-k membership/order can be certified.
 
 `ExactSlidingWindow` (FIFO + exact per-ID map) is used only as the Ground Truth oracle; its memory and processing cost are excluded from approximate-method measurements.
 
@@ -203,13 +208,19 @@ make sensitivity-plot
 
 Full settings and metric definitions: `docs/SENSITIVITY_PROTOCOL.md`. The expanded sweeps deliberately include the full-alphabet cumulative counter capacity of 10,000. For windowing, 10,000 is the TOTAL across all blocks, not the per-block capacity; it need not give exact frequencies. Figure 6's alpha-specific policy remains unchanged, including its full-alphabet fallback for alpha < 1. Counter budgets are project parameters, not recovered original-paper settings.
 
-## 文獻對照與小型視窗驗證
-
-- [Sliding Window 文獻與現有方法對照](docs/SLIDING_WINDOW_PAPER_COMPARISON_ZH.md)
-- [可手算案例與重跑方式](examples/windowed_validation/README.md)
-- [驗證結果表](results/validation/WALKTHROUGH_ZH.md)
-- [本次工作與驗證結論](docs/WINDOWED_VALIDATION_CONTRIBUTION_ZH.md)
+### Periodic Reset: reproducing the omitted baseline
 
 ```sh
-make test windowed-walkthrough
+make test-periodic
+make periodic-comparison
 ```
+
+Output: `results/periodic/windowed_with_periodic.csv` and plots under
+`results/periodic/plots/`. This independent output preserves previously
+measured CSVs. The new columns `observed_window_fraction`,
+`full_window_query_rate`, `aligned_query_count`, `aligned_*` allow reporting
+both (i) all-query accuracy against true recent-W Top-k and (ii) the
+at-full-boundary subset where the interval baseline represents exactly W.
+The old sensitivity CSVs have not been automatically relabeled or fabricated.
+
+[Periodic-reset experiment findings](results/periodic/RESULTS_SUMMARY.md).

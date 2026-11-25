@@ -68,7 +68,7 @@ The implementation separately reports `order_certified`, which certifies the ord
 - `Bound-Aware-Block-Merge`: aggregate per-block lower/upper bounds, rank by interval midpoint, and report membership/order certification.
 - `ExactSlidingWindow`: exact FIFO + hash-map counts used only as the evaluation oracle. Its memory and runtime are excluded from approximate-method measurements.
 
-The periodic-reset control is not included in this implementation's primary comparison because a single reset summary every `W` packets does not represent the latest `W` packets at intermediate common query points (e.g. at `150K` when `W=100K`). It can be added as a separate tumbling-window control queried only at its own interval boundaries.
+- `Periodic-Reset-SpaceSaving` (tumbling-interval baseline): one Space-Saving summary with `M` counters. It resets **before packet `nW+1`** (not before querying packet `nW`). Thus at `t=nW` the entire most recent W events are represented, but at intermediate query positions only the current partial interval is represented. It is deliberately scored at the SAME common query positions against exact latest-W ground truth; this exposes the loss from incomplete window coverage rather than treating the partial interval as a full sliding window. We also report aligned-only accuracy at `t % W == 0` as an auxiliary, strictly full-window comparison.
 
 ## 5. Default experiment assumptions
 
@@ -97,7 +97,8 @@ The generator, alphabet, seeds, phase construction, and query cadence are reprod
 
 ## 6. Metrics and interpretation
 
-- Precision / Recall: macro-average over common query points against exact Top-k of the latest `W` events.
+- Precision / Recall: macro-average over common query points against exact Top-k of the latest `W` events. Periodic-Reset is a tumbling-window control; its partial coverage is intentional and exposed via `observed_window_fraction` and `full_window_query_rate`.
+- Aligned-only Precision/Recall/Tie-aware metrics: calculated using only common queries at `t % W == 0`, when Periodic-Reset has exactly W events. These metrics must not be conflated with all-query averages; aligned-only points are a subset. The `aligned_query_count` field gives its denominator.
 - Certification rate: fraction of query points where the returned membership set is strictly certified by the merged intervals.
 - Order certification rate: fraction of query points where the returned candidates' internal order is certified.
 - Average bound width: mean `U-L` across returned candidates and query points.
@@ -117,6 +118,7 @@ make test
 make windowed-smoke
 make windowed-experiment
 make windowed-plot
+make periodic-comparison  # new independent CSV with periodic-reset baseline
 ```
 
 The smoke target uses a small stream and enables bound validation. The full target uses the defaults above and writes `results/windowed/windowed_comparison.csv`.
