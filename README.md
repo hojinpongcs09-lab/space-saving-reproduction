@@ -73,3 +73,7 @@ make windowed-walkthrough    # 可手算的小型視窗驗證
 - Homem, Carvalho. [Finding Top-k Elements in a Time-Sliding Window](https://doi.org/10.1007/s12530-010-9020-z). Evolving Systems, 2011.
 - [Floating Top-k](https://doi.org/10.1016/j.ins.2018.09.066)（2019）、[Memento](https://arxiv.org/abs/1810.02899)（2018）、[Expiration Filter](https://doi.org/10.1016/j.comnet.2024.111010)（2025）、[Mergeable Summaries](https://doi.org/10.1145/2500128)（2013）。
 - [byronknoll 的 C++ Space-Saving 實作](https://github.com/byronknoll/space-saving)、[Frequent Items 演算法比較套件](https://hadjieleftheriou.com/frequent-items/)。
+
+## 中文實驗結果分析
+
+[三組核心圖與報告稿](SpaceSaving_CountSketch_Integrated/docs/RESULTS_ANALYSIS_ZH.md)串聯文獻、手算驗證與 Periodic 比較結果，並附上資料重算表與限制說明。
