@@ -235,3 +235,7 @@ The old sensitivity CSVs have not been automatically relabeled or fabricated.
 ```sh
 make test windowed-walkthrough
 ```
+
+## 中文結果分析與報告素材
+
+[結果分析](docs/RESULTS_ANALYSIS_ZH.md)包含準確度、初步時間與認證率三組核心圖的判讀、比較口徑與口頭報告稿。數值由既有 Periodic CSV 重算，非新的效能量測。
